@@ -1,0 +1,111 @@
+.sidebar {
+    width: 250px;
+    background-color: #252525;
+    border-right: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.sidebarHeader {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+}
+
+.sidebarHeader h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.createButton {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background-color: #444;
+    border: none;
+    color: #e0e0e0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.createButton:hover {
+    background-color: #555;
+}
+
+.documentList {
+    padding: 0.5rem;
+    flex: 1;
+}
+
+.documentItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 0.25rem;
+}
+
+.documentItem:hover {
+    background-color: #333;
+}
+
+.documentItem.active {
+    background-color: #3a3a3a;
+}
+
+.documentName {
+    flex: 1;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.deleteButton {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+}
+
+.documentItem:hover .deleteButton {
+    opacity: 1;
+}
+
+.deleteButton:hover {
+    color: #ff6b6b;
+}
+
+.sidebarFooter {
+    padding: 1rem;
+    border-top: 1px solid #333;
+}
+
+.sidebarFooter h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #999;
+}
+
+.templateItem {
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.templateItem:hover {
+    background-color: #333;
+}

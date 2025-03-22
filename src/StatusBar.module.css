@@ -1,0 +1,19 @@
+.statusBar {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background-color: #252525;
+    border-top: 1px solid #333;
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.counts {
+    display: flex;
+    gap: 1rem;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+}

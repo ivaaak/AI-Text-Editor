@@ -1,0 +1,72 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #252525;
+    border-bottom: 1px solid #333;
+    height: 3rem;
+}
+
+.leftSection,
+.rightSection {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.centerSection {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.appLogo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.appName {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.iconButton {
+    background: none;
+    border: none;
+    color: #e0e0e0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.iconButton:hover {
+    background-color: #333;
+}
+
+.documentTitle {
+    background-color: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 1rem;
+    padding: 0.5rem;
+    text-align: center;
+    width: 250px;
+}
+
+.userProfile {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
