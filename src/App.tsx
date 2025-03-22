@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Header from './Header';
 import TextEditor from './TextEditor';
 import AIPanel from './AIPanel';
-import { Claude } from './services/claude-sdk';
+import ApiKeyProvider from './ApiKeyProvider';
 import styles from './App.module.css';
+import { Claude, ClaudeTextEditor, createClaudeService } from './services/claude-sdk';
 
 export interface Document {
   id: number;
@@ -21,14 +22,40 @@ const App: React.FC = () => {
   const [currentDocId, setCurrentDocId] = useState<number>(1);
   const [aiMode, setAiMode] = useState<AIMode>('suggestion');
   const [claudeClient, setClaudeClient] = useState<Claude | null>(null);
+  const [textEditor, setTextEditor] = useState<ClaudeTextEditor | null>(null);
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const [streamContent, setStreamContent] = useState<string>('');
+  const [apiKeySet, setApiKeySet] = useState<boolean>(false);
 
-  // Initialize Claude client
+  // Initialize Claude client when API key is set
+  const initializeClaudeClient = (apiKey: string) => {
+    if (!apiKey) {
+      console.error('No API key provided');
+      return;
+    }
+    
+    try {
+      const { claude, textEditor } = createClaudeService({
+        apiKey,
+        sessionId: `ai-text-editor-${Date.now()}`,
+        model: 'claude-3-opus-20240229'
+      });
+      
+      setClaudeClient(claude);
+      setTextEditor(textEditor);
+      setApiKeySet(true);
+      console.log('Claude client initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize Claude client:', error);
+    }
+  };
+
+  // Check for stored API key on component mount
   useEffect(() => {
-    const client = new Claude({
-      apiKey: process.env.ANTHROPIC_API_KEY || '',
-      sessionId: 'ai-text-editor-session'
-    });
-    setClaudeClient(client);
+    const storedApiKey = localStorage.getItem('ANTHROPIC_API_KEY');
+    if (storedApiKey) {
+      initializeClaudeClient(storedApiKey);
+    }
   }, []);
 
   const handleTextChange = (newText: string): void => {
@@ -42,39 +69,55 @@ const App: React.FC = () => {
   };
 
   const generateAIResponse = async (prompt: string, customMode?: AIMode): Promise<void> => {
-    if (!claudeClient) return;
+    if (!claudeClient || !textEditor) {
+      console.error('Claude service not initialized');
+      return;
+    }
     
     const mode = customMode || aiMode;
     setIsProcessing(true);
+    setAiSuggestion('');
     
     try {
-      let promptTemplate = '';
+      let response: string = '';
       
       switch (mode) {
         case 'suggestion':
-          promptTemplate = `I'm writing the following text. Please provide suggestions to improve it:\n\n${text}`;
+          response = await textEditor.suggest(text);
           break;
         case 'completion':
-          promptTemplate = `Please continue the following text in the same style:\n\n${text}`;
-          break;
+          // For completion, we'll use streaming to provide a better UX
+          setIsStreaming(true);
+          setStreamContent('');
+          
+          await claudeClient.streamMessage(
+            `Please continue the following text in the same style:\n\n${text}`,
+            (chunk) => {
+              setStreamContent(prev => prev + chunk);
+            },
+            (fullResponse) => {
+              setAiSuggestion(fullResponse.content);
+              setIsStreaming(false);
+            }
+          );
+          return;
         case 'edit':
-          promptTemplate = `Please edit and improve the following text:\n\n${text}\n\nProvide the full edited version.`;
+          response = await textEditor.edit(text);
           break;
         case 'summarize':
-          promptTemplate = `Please summarize the following text:\n\n${text}`;
+          response = await textEditor.summarize(text);
           break;
         case 'rewrite':
-          promptTemplate = `Please rewrite the following text ${prompt}:\n\n${text}`;
+          response = await textEditor.rewrite(text, prompt);
           break;
         case 'translate':
-          promptTemplate = `Please translate the following text to ${prompt}:\n\n${text}`;
+          response = await textEditor.translate(text, prompt);
           break;
         default:
-          promptTemplate = prompt || `Please help me with this text:\n\n${text}`;
+          response = await textEditor.processCustomPrompt(text, prompt);
       }
       
-      const response = await claudeClient.message(promptTemplate);
-      setAiSuggestion(response.content);
+      setAiSuggestion(response);
     } catch (error) {
       console.error('Error generating AI response:', error);
       setAiSuggestion('Sorry, there was an error generating a response. Please try again.');
@@ -84,13 +127,34 @@ const App: React.FC = () => {
   };
 
   const applyAiSuggestion = (): void => {
-    setText(aiSuggestion);
+    // If we're streaming, use the current stream content
+    const contentToApply = isStreaming ? streamContent : aiSuggestion;
     
-    // Update the current document
-    const updatedDocs = documents.map(doc => 
-      doc.id === currentDocId ? { ...doc, content: aiSuggestion } : doc
-    );
-    setDocuments(updatedDocs);
+    if (isStreaming) {
+      // If we're in completion mode, append the suggestion to the current text
+      const newText = text + contentToApply;
+      setText(newText);
+      
+      // Update the current document
+      const updatedDocs = documents.map(doc => 
+        doc.id === currentDocId ? { ...doc, content: newText } : doc
+      );
+      setDocuments(updatedDocs);
+    } else {
+      // For other modes, replace the content
+      setText(contentToApply);
+      
+      // Update the current document
+      const updatedDocs = documents.map(doc => 
+        doc.id === currentDocId ? { ...doc, content: contentToApply } : doc
+      );
+      setDocuments(updatedDocs);
+    }
+  };
+
+  const stopStreaming = (): void => {
+    setIsStreaming(false);
+    setAiSuggestion(streamContent);
   };
 
   const createNewDocument = (): void => {
@@ -100,6 +164,12 @@ const App: React.FC = () => {
     setCurrentDocId(newId);
     setText('');
     setAiSuggestion('');
+    setStreamContent('');
+    
+    // Clear the Claude conversation history when creating a new document
+    if (claudeClient) {
+      claudeClient.clearHistory();
+    }
   };
 
   const loadDocument = (id: number): void => {
@@ -108,6 +178,12 @@ const App: React.FC = () => {
       setText(doc.content);
       setCurrentDocId(id);
       setAiSuggestion('');
+      setStreamContent('');
+      
+      // Clear the Claude conversation history when switching documents
+      if (claudeClient) {
+        claudeClient.clearHistory();
+      }
     }
   };
 
@@ -120,6 +196,8 @@ const App: React.FC = () => {
 
   return (
     <div className={styles.app}>
+      {!apiKeySet && <ApiKeyProvider onApiKeySet={initializeClaudeClient} />}
+      
       <Header 
         documents={documents} 
         currentDocId={currentDocId} 
@@ -132,14 +210,23 @@ const App: React.FC = () => {
           <TextEditor text={text} onTextChange={handleTextChange} />
         </div>
         <div className={styles.aiSection}>
-          <AIPanel 
-            aiSuggestion={aiSuggestion} 
-            applyAiSuggestion={applyAiSuggestion} 
-            aiMode={aiMode}
-            setAiMode={setAiMode}
-            generateAIResponse={generateAIResponse}
-            isProcessing={isProcessing}
-          />
+          {!apiKeySet ? (
+            <div className={styles.aiSectionPlaceholder}>
+              <h2>AI Features</h2>
+              <p>Please set your Claude API key to enable AI features</p>
+            </div>
+          ) : (
+            <AIPanel 
+              aiSuggestion={isStreaming ? streamContent : aiSuggestion} 
+              applyAiSuggestion={applyAiSuggestion}
+              aiMode={aiMode}
+              setAiMode={setAiMode}
+              generateAIResponse={generateAIResponse}
+              isProcessing={isProcessing}
+              isStreaming={isStreaming}
+              stopStreaming={stopStreaming}
+            />
+          )}
         </div>
       </div>
     </div>

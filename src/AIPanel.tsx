@@ -7,7 +7,8 @@ import {
   FileText, 
   RefreshCw, 
   Send,
-  Loader
+  Loader,
+  Square
 } from 'lucide-react';
 import styles from './AIPanel.module.css';
 import { AIMode } from './App';
@@ -19,6 +20,8 @@ interface AIPanelProps {
   setAiMode: React.Dispatch<React.SetStateAction<AIMode>>;
   generateAIResponse: (prompt: string, mode?: AIMode) => Promise<void>;
   isProcessing: boolean;
+  isStreaming?: boolean;
+  stopStreaming?: () => void;
 }
 
 const AIPanel: React.FC<AIPanelProps> = ({ 
@@ -27,7 +30,9 @@ const AIPanel: React.FC<AIPanelProps> = ({
   aiMode, 
   setAiMode,
   generateAIResponse,
-  isProcessing
+  isProcessing,
+  isStreaming = false,
+  stopStreaming = () => {}
 }) => {
   const [promptText, setPromptText] = useState<string>('');
   const [translateLanguage, setTranslateLanguage] = useState<string>('Spanish');
@@ -60,23 +65,40 @@ const AIPanel: React.FC<AIPanelProps> = ({
   return (
     <div className={styles.aiPanel}>
       <div className={styles.aiSection}>
-        <h2 className={styles.sectionTitle}>AI Section</h2>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>AI Section</h2>
+          {isStreaming && (
+            <button 
+              className={styles.stopStreamingButton}
+              onClick={stopStreaming}
+              title="Stop generating"
+            >
+              <Square size={16} />
+              <span>Stop</span>
+            </button>
+          )}
+        </div>
         <div className={styles.aiContent}>
           <div className={styles.aiPreview}>
-            {isProcessing ? (
+            {isProcessing && !isStreaming ? (
               <div className={styles.loadingIndicator}>
                 <Loader size={24} className={styles.spinner} />
                 <span>Generating...</span>
               </div>
             ) : (
-              aiSuggestion || ''
+              <div className={isStreaming ? styles.streamingContent : ''}>
+                {aiSuggestion || ''}
+                {isStreaming && (
+                  <span className={styles.cursorBlink}></span>
+                )}
+              </div>
             )}
           </div>
           <div className={styles.previewActions}>
             <button 
               className={styles.applyButton}
               onClick={applyAiSuggestion}
-              disabled={!aiSuggestion || isProcessing}
+              disabled={(!aiSuggestion && !isStreaming) || (isProcessing && !isStreaming)}
             >
               Apply to Editor
             </button>

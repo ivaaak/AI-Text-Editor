@@ -1,0 +1,104 @@
+.apiKeyContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.apiKeyForm {
+    background-color: white;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 500px;
+}
+
+.apiKeyForm h2 {
+    margin-top: 0;
+    color: #333;
+    font-size: 20px;
+}
+
+.apiKeyForm p {
+    color: #666;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.apiKeyInput {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.submitButton {
+    width: 100%;
+    padding: 10px;
+    background-color: #4a6cfa;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.submitButton:hover {
+    background-color: #3a5ad4;
+}
+
+.infoText {
+    margin-top: 16px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.infoText a {
+    color: #4a6cfa;
+    text-decoration: none;
+}
+
+.infoText a:hover {
+    text-decoration: underline;
+}
+
+.apiKeyBadge {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background-color: #4a6cfa;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.resetButton {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.resetButton:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
